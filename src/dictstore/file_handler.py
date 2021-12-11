@@ -42,7 +42,7 @@ class FileHandler:
             return True
         return False
 
-    def __init__(self, file_path="./default.dictstore") -> None:
+    def __init__(self, file_path) -> None:
         """
         creates a file handler for the datastore file.
                 Exceptions:
@@ -77,3 +77,14 @@ class FileHandler:
         """Appends the given string to data file"""
         with open(self.file_path, 'a', encoding='utf-8') as data_file:
             data_file.write(string)
+
+    def read_from_file(self) -> str:
+        """
+        Reads the contents of data file and
+        returns all the contents of file
+        without the first two lines
+        """
+        with open(self.file_path, 'r', encoding='utf-8') as data_file:
+            data_file.readline()
+            data_file.readline()
+            return data_file.read()

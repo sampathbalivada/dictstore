@@ -29,3 +29,16 @@ class InvalidFileExtension(Exception):
                         )
 
         super().__init__(self.message)
+
+
+class DataStoreFileCorrupted(Exception):
+    """
+    Raised when the JSON loads function
+    cannot decode the contents of the data file
+    """
+
+    def __init__(self) -> None:
+        self.message = ("The datastore file might be corrupted"
+                        "or the contents of the file have been edited manually"
+                        )
+        super().__init__(self.message)
