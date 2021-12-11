@@ -1,1 +1,9 @@
+# code editor settings
 .vscode/
+
+# dictstore data files
+*.dictstore
+
+# unwanted python files
+*/main.py
+__pycache__/

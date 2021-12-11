@@ -32,7 +32,11 @@ class DictStore:
         Initializes the in memory dictionary and
         copies all the records from the database file to memory
         """
+        # create an in memory dictionary to store the value
         self.in_memory_dictionary = {}
+
+        # return None if the key does not exist
+        self.in_memory_dictionary.setdefault(None)
 
     def __len__(self) -> int:
         """returns the number of records in the database"""
@@ -53,13 +57,12 @@ class DictStore:
         """returns a list of all the values in the datastore"""
         return self.in_memory_dictionary.values()
 
-    def set_default_value(self):
+    def set_default_value(self, value):
         """
         sets the default value to be returned by get()
         if the key doesnot exist in the datastore
         """
-        print("ERROR: Unable to change default value.")
-        print("Default value is currently set to None.")
+        self.in_memory_dictionary.setdefault(value)
 
     def upsert_record(self, key, value):
         """takes a key and value objects and stores them in the datastore"""
@@ -78,4 +81,4 @@ if __name__ == '__main__':
 
     print(dict_store.keys())
     print(dict_store.values())
-    dict_store.set_default_value()
+    dict_store.set_default_value(None)
