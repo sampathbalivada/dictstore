@@ -21,11 +21,10 @@ similar to a python dictionary.
 """
 
 
-from json.decoder import JSONDecodeError
 from typing import Any
 import json
-from dictstore.exceptions import DataStoreFileCorrupted
 
+from dictstore.exceptions import DataStoreFileCorrupted
 from dictstore.file_handler import FileHandler
 
 
@@ -52,17 +51,41 @@ class DictStore:
         # fetch the records from data file
         json_string = self.file_handler.read_from_file()
 
+        # check if the json string has a trailing comma and remove it
+        if json_string[-1] == ',':
+            json_string = json_string[:-1]
+
         # add '{' at the start and '}' at the end
         json_string = '{' + json_string + '}'
 
         # convert json string to dictionary
         try:
             json_data = json.loads(json_string)
-        except JSONDecodeError as json_decode_error:
+        except json.decoder.JSONDecodeError as json_decode_error:
             raise DataStoreFileCorrupted() from json_decode_error
 
         # update the in memory dictionary with the JSON data
         self.in_memory_dictionary.update(json_data)
+
+    def __get_sanitised_key(self, key: Any) -> str:
+        """
+        checks if the given object is an integer or string.
+        returns the key string if the object is an integer
+        or if the object is a string
+        without the '<' and '>' characters
+        """
+
+        if isinstance(key, int):
+            return f'<int>{key}'
+
+        is_string = isinstance(key, str)
+        is_int_key = '<int>' == key[:5]
+        has_unsupported_chars = '<' in key or '>' in key
+        if (is_string and not has_unsupported_chars) or is_int_key:
+            return key
+
+        print(key, type(key))
+        raise KeyError()
 
     def __rewrite_data_file(self) -> None:
         """
@@ -72,9 +95,9 @@ class DictStore:
         to the data file.
         """
 
-        json_string = json.dumps(self.in_memory_dictionary, sort_keys=True)
+        json_string = json.dumps(self.in_memory_dictionary)
 
-        self.file_handler.rewrite_to_file(json_string[1:-1])
+        self.file_handler.rewrite_to_file(json_string[1:-1] + ',')
 
     def __add_record_to_data_file(self, record: dict) -> None:
         """
@@ -86,7 +109,7 @@ class DictStore:
 
         json_string = json.dumps(record)
 
-        self.file_handler.append_to_file(', ' + json_string[1:-1])
+        self.file_handler.append_to_file(json_string[1:-1] + ',')
 
     # -----------------
     # Read Operations
@@ -107,6 +130,8 @@ class DictStore:
         takes a key and returns the value if it exists.
         returns None if the key does not exist.
         """
+        key = self.__get_sanitised_key(key)
+
         return self.in_memory_dictionary.get(key)
 
     # -----------------
@@ -124,6 +149,7 @@ class DictStore:
         and updates the value if it already exists
         creates a new record otherwise
         """
+        key = self.__get_sanitised_key(key)
 
         # if there is no record with the given key
         # update the in memory dictionary and
@@ -144,6 +170,7 @@ class DictStore:
         takes a key
         and removes the record if it exists
         """
+        key = self.__get_sanitised_key(key)
 
         # if a record exists with the given key
         # remove it from the in memory dictionary
