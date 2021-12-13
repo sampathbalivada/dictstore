@@ -4,6 +4,11 @@
 # dictstore data files
 *.dictstore
 
-# unwanted python files
-*/main.py
+# distribution files
+/dist/
+/build/
+dictstore.egg-info/
 __pycache__/
+
+# virtual environment
+/testvenv/
