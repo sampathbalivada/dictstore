@@ -38,7 +38,7 @@ class DataStoreFileCorrupted(Exception):
     """
 
     def __init__(self) -> None:
-        self.message = ("The datastore file might be corrupted"
+        self.message = ("The datastore file might be corrupted "
                         "or the contents of the file have been edited manually"
                         )
         super().__init__(self.message)
