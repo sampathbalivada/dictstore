@@ -67,11 +67,11 @@ class FileHandler:
         with open(self.file_path, 'r', encoding='utf-8') as data_file:
             self.file_contents = data_file.read()
 
-    def rewrite_to_file(self, string: str) -> None:
-        """Writes the given string to data file"""
+    def rewrite_to_file(self, lines) -> None:
+        """Writes the given lines to data file"""
         with open(self.file_path, 'w', encoding='utf-8') as data_file:
             data_file.write(generate_file_header_string())
-            data_file.write(string)
+            data_file.writelines(lines)
 
     def append_to_file(self, string: str) -> None:
         """Appends the given string to data file"""
@@ -87,4 +87,4 @@ class FileHandler:
         with open(self.file_path, 'r', encoding='utf-8') as data_file:
             data_file.readline()
             data_file.readline()
-            return data_file.read()
+            return data_file.readlines()

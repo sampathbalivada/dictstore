@@ -22,7 +22,8 @@ similar to a python dictionary.
 
 
 from typing import Any
-import json
+# import json
+import ast
 
 from dictstore.exceptions import DataStoreFileCorrupted
 from dictstore.file_handler import FileHandler
@@ -48,24 +49,22 @@ class DictStore:
         # initialize the data file
         self.file_handler = FileHandler(datastore_location)
 
-        # fetch the records from data file
-        json_string = self.file_handler.read_from_file()
+        # fetch the file contents and parse accordingly
+        # parse key and value as JSON objects
 
-        # check if the json string has a trailing comma and remove it
-        if json_string[-1] == ',':
-            json_string = json_string[:-1]
+        data = self.file_handler.read_from_file()
 
-        # add '{' at the start and '}' at the end
-        json_string = '{' + json_string + '}'
+        # check if the number of lines are even
 
-        # convert json string to dictionary
-        try:
-            json_data = json.loads(json_string)
-        except json.decoder.JSONDecodeError as json_decode_error:
-            raise DataStoreFileCorrupted() from json_decode_error
+        if len(data) % 2 != 0:
+            raise DataStoreFileCorrupted()
 
-        # update the in memory dictionary with the JSON data
-        self.in_memory_dictionary.update(json_data)
+        for line_number_of_key in range(0, len(data), 2):
+            key = data[line_number_of_key]
+            key_parsed = ast.literal_eval(key)
+            value = data[line_number_of_key + 1]
+            value_parsed = ast.literal_eval(value)
+            self.in_memory_dictionary[key_parsed] = value_parsed
 
     def __get_sanitised_key(self, key: Any) -> str:
         """
@@ -75,17 +74,17 @@ class DictStore:
         without the '<' and '>' characters
         """
 
-        if isinstance(key, int):
-            return f'<int>{key}'
+        return key
 
-        is_string = isinstance(key, str)
-        is_int_key = '<int>' == key[:5]
-        has_unsupported_chars = '<' in key or '>' in key
-        if (is_string and not has_unsupported_chars) or is_int_key:
-            return key
+    def __get_escaped_string(self, var: Any) -> str:
+        """
+        checks if the given key or value is an integers and adds
+        quotes around the key if it is.
+        """
+        if isinstance(var, str):
+            return '\'' + var + '\''
 
-        print(key, type(key))
-        raise KeyError()
+        return str(var)
 
     def __rewrite_data_file(self) -> None:
         """
@@ -95,11 +94,19 @@ class DictStore:
         to the data file.
         """
 
-        json_string = json.dumps(self.in_memory_dictionary)
+        # convert each record into the desired format
+        # Format: key, json(value)
 
-        self.file_handler.rewrite_to_file(json_string[1:-1] + ',')
+        data_file_cache = []
 
-    def __add_record_to_data_file(self, record: dict) -> None:
+        for key, value in self.in_memory_dictionary.items():
+            print(key, '|', value)
+            data_file_cache.append(self.__get_escaped_string(key) + '\n')
+            data_file_cache.append(self.__get_escaped_string(value) + '\n')
+
+        self.file_handler.rewrite_to_file(data_file_cache)
+
+    def __add_record_to_data_file(self, key, value) -> None:
         """
         converts the given record to JSON string
         removes the '{' and '}' symbols at the start and end
@@ -107,9 +114,10 @@ class DictStore:
         to the end of data file
         """
 
-        json_string = json.dumps(record)
+        data_record_cache = self.__get_escaped_string(key) + '\n'
+        data_record_cache += self.__get_escaped_string(value) + '\n'
 
-        self.file_handler.append_to_file(json_string[1:-1] + ',')
+        self.file_handler.append_to_file(data_record_cache)
 
     # -----------------
     # Read Operations
@@ -156,7 +164,7 @@ class DictStore:
         # add record to the data file
         if self.get(key) is None:
             self.in_memory_dictionary[key] = value
-            self.__add_record_to_data_file({key: value})
+            self.__add_record_to_data_file(key, value)
 
         # if a record exists with the given key
         # add new key-value pair to in memory dictionary
