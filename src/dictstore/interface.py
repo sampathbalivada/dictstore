@@ -22,7 +22,6 @@ similar to a python dictionary.
 
 
 from typing import Any
-# import json
 import ast
 
 from dictstore.exceptions import DataStoreFileCorrupted
