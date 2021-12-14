@@ -67,7 +67,7 @@ class DictStore:
 
     def __get_escaped_string(self, var: Any) -> str:
         """
-        checks if the given key or value is an integers and adds
+        checks if the given key or value is a string and adds
         quotes around the key if it is.
         """
         if isinstance(var, str):
@@ -77,14 +77,15 @@ class DictStore:
 
     def __rewrite_data_file(self) -> None:
         """
-        converts in memory dictionary to JSON string
-        removes the '{' and '}' symbols at the start and end
+        converts in memory dictionary to string
         asks file handler to write the resulting string
         to the data file.
         """
 
         # convert each record into the desired format
-        # Format: key, json(value)
+        # Format:
+        # key \n
+        # json(value) \n
 
         data_file_cache = []
 
@@ -97,8 +98,7 @@ class DictStore:
 
     def __add_record_to_data_file(self, key, value) -> None:
         """
-        converts the given record to JSON string
-        removes the '{' and '}' symbols at the start and end
+        converts the given record to string
         asks file handler to append the resulting string
         to the end of data file
         """
