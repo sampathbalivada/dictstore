@@ -65,16 +65,6 @@ class DictStore:
             value_parsed = ast.literal_eval(value)
             self.in_memory_dictionary[key_parsed] = value_parsed
 
-    def __get_sanitised_key(self, key: Any) -> str:
-        """
-        checks if the given object is an integer or string.
-        returns the key string if the object is an integer
-        or if the object is a string
-        without the '<' and '>' characters
-        """
-
-        return key
-
     def __get_escaped_string(self, var: Any) -> str:
         """
         checks if the given key or value is an integers and adds
@@ -137,7 +127,6 @@ class DictStore:
         takes a key and returns the value if it exists.
         returns None if the key does not exist.
         """
-        key = self.__get_sanitised_key(key)
 
         return self.in_memory_dictionary.get(key)
 
@@ -156,7 +145,6 @@ class DictStore:
         and updates the value if it already exists
         creates a new record otherwise
         """
-        key = self.__get_sanitised_key(key)
 
         # if there is no record with the given key
         # update the in memory dictionary and
@@ -177,7 +165,6 @@ class DictStore:
         takes a key
         and removes the record if it exists
         """
-        key = self.__get_sanitised_key(key)
 
         # if a record exists with the given key
         # remove it from the in memory dictionary
