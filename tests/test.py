@@ -19,7 +19,11 @@ tests module for dictstore
 import unittest
 import os
 from dictstore import file_handler
-import dictstore.exceptions
+from dictstore.exceptions import (
+    InvalidFileExtension,
+    DataStoreFileCorrupted,
+    UnsupportedValueType
+)
 from dictstore.interface import DictStore
 
 
@@ -33,6 +37,19 @@ def clean_temp_files(file_name):
         pass
 
 
+class Test:
+    """Test Class for Testing Key and Values Types"""
+    count = 0
+
+    def __init__(self) -> None:
+        self.message = 'Test Class'
+
+    def __hash__(self) -> int:
+        """hash function"""
+        Test.count += 1
+        return Test.count
+
+
 class TestFileHandler(unittest.TestCase):
     """
     Unit tests for FileHandler class
@@ -42,8 +59,27 @@ class TestFileHandler(unittest.TestCase):
         checks if an invalid filename raises
         the InvalidFileExtension exception.
         """
-        with self.assertRaises(dictstore.exceptions.InvalidFileExtension):
+        with self.assertRaises(InvalidFileExtension):
             file_handler.FileHandler('file_name_without_dictstore_extension')
+
+    def test_invalid_file_contents(self):
+        """
+        checks if invalid file contents raise
+        DataStoreFileCorrupted exception.
+        """
+
+        data_file_name = 'tests/test_invalid_file_contents.dictstore'
+
+        clean_temp_files(data_file_name)
+
+        # create the data file
+        file_handler.FileHandler(data_file_name)
+
+        with open(data_file_name, 'a', encoding='utf-8') as data_file:
+            data_file.writelines('abcd')
+
+        with self.assertRaises(DataStoreFileCorrupted):
+            DictStore(data_file_name)
 
 
 class TestDictStoreKeys(unittest.TestCase):
@@ -172,10 +208,6 @@ class TestDictStoreValues(unittest.TestCase):
         checks if UnsupportedValueType is raised.
         """
 
-        class Test:
-            def __init__(self) -> None:
-                self.message = 'Test Class'
-
         test_class_instance = Test()
 
         data_file_name = ('tests/test_if_unsupported_'
@@ -184,9 +216,45 @@ class TestDictStoreValues(unittest.TestCase):
 
         clean_temp_files(data_file_name)
 
-        with self.assertRaises(dictstore.exceptions.UnsupportedValueType):
+        with self.assertRaises(UnsupportedValueType):
             dict_store = DictStore(data_file_name)
             dict_store['Hi'] = test_class_instance
+
+    def test_if_unsupported_type_expection_raised_nested_list(self):
+        """
+        checks if UnsupportedValueType is raised
+        for nested values
+        """
+
+        test_value = [Test(), Test()]
+
+        data_file_name = ('tests/test_if_unsupported_'
+                          'type_expection_raised_nested_list.dictstore'
+                          )
+
+        clean_temp_files(data_file_name)
+
+        with self.assertRaises(UnsupportedValueType):
+            dict_store = DictStore(data_file_name)
+            dict_store['Hi'] = test_value
+
+    def test_if_unsupported_type_expection_raised_nested_set(self):
+        """
+        checks if UnsupportedValueType is raised
+        for nested values
+        """
+
+        test_value = set([Test(), Test()])
+
+        data_file_name = ('tests/test_if_unsupported_'
+                          'type_expection_raised_nested_set.dictstore'
+                          )
+
+        clean_temp_files(data_file_name)
+
+        with self.assertRaises(UnsupportedValueType):
+            dict_store = DictStore(data_file_name)
+            dict_store['Hi'] = test_value
 
 
 if __name__ == '__main__':
