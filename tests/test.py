@@ -23,6 +23,16 @@ import dictstore.exceptions
 from dictstore.interface import DictStore
 
 
+def clean_temp_files(file_name):
+    """
+    remove data file if already exists
+    """
+    try:
+        os.remove(file_name)
+    except OSError:
+        pass
+
+
 class TestFileHandler(unittest.TestCase):
     """
     Unit tests for FileHandler class
@@ -49,15 +59,6 @@ class TestDictStoreKeys(unittest.TestCase):
                 String Tuple
     """
 
-    def __clean_temp_files(self, file_name):
-        """
-        remove data file if already exists
-        """
-        try:
-            os.remove(file_name)
-        except OSError:
-            pass
-
     def test_integer_key(self):
         """
         checks if integer keys are working correctly
@@ -65,7 +66,7 @@ class TestDictStoreKeys(unittest.TestCase):
 
         data_file_name = 'tests/test_integer_key.dictstore'
 
-        self.__clean_temp_files(data_file_name)
+        clean_temp_files(data_file_name)
 
         dict_store = DictStore(data_file_name)
         dict_store[1] = 45
@@ -80,7 +81,7 @@ class TestDictStoreKeys(unittest.TestCase):
 
         data_file_name = 'tests/test_float_key.dictstore'
 
-        self.__clean_temp_files(data_file_name)
+        clean_temp_files(data_file_name)
 
         dict_store = DictStore(data_file_name)
         dict_store[1.2] = 45
@@ -95,7 +96,7 @@ class TestDictStoreKeys(unittest.TestCase):
 
         data_file_name = 'tests/test_char_string_key.dictstore'
 
-        self.__clean_temp_files(data_file_name)
+        clean_temp_files(data_file_name)
 
         dict_store = DictStore(data_file_name)
         dict_store['str'] = 45
@@ -110,7 +111,7 @@ class TestDictStoreKeys(unittest.TestCase):
 
         data_file_name = 'tests/test_integer_string_key.dictstore'
 
-        self.__clean_temp_files(data_file_name)
+        clean_temp_files(data_file_name)
 
         dict_store = DictStore(data_file_name)
         dict_store['2'] = 45
@@ -125,7 +126,7 @@ class TestDictStoreKeys(unittest.TestCase):
 
         data_file_name = 'tests/test_integer_tuple_key.dictstore'
 
-        self.__clean_temp_files(data_file_name)
+        clean_temp_files(data_file_name)
 
         dict_store = DictStore(data_file_name)
         dict_store[(1, 2)] = 45
@@ -140,13 +141,52 @@ class TestDictStoreKeys(unittest.TestCase):
 
         data_file_name = 'tests/test_string_tuple_key.dictstore'
 
-        self.__clean_temp_files(data_file_name)
+        clean_temp_files(data_file_name)
 
         dict_store = DictStore(data_file_name)
         dict_store[('1', '2')] = 45
 
         dict_store = DictStore(data_file_name)
         self.assertEqual(dict_store[('1', '2')], 45, "String Tuple Key")
+
+
+class TestDictStoreValues(unittest.TestCase):
+    """
+    checks if all types of storable values are
+    being accepted and retrieved correctly
+
+        Values Types:
+            - strings
+            - bytes
+            - numbers
+            - tuples
+            - lists
+            - dicts
+            - sets
+            - booleans
+            - None
+    """
+
+    def test_if_unsupported_type_expection_raised(self):
+        """
+        checks if UnsupportedValueType is raised.
+        """
+
+        class Test:
+            def __init__(self) -> None:
+                self.message = 'Test Class'
+
+        test_class_instance = Test()
+
+        data_file_name = ('tests/test_if_unsupported_'
+                          'type_expection_raised.dictstore'
+                          )
+
+        clean_temp_files(data_file_name)
+
+        with self.assertRaises(dictstore.exceptions.UnsupportedValueType):
+            dict_store = DictStore(data_file_name)
+            dict_store['Hi'] = test_class_instance
 
 
 if __name__ == '__main__':

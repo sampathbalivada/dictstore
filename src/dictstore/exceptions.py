@@ -52,13 +52,12 @@ class UnsupportedValueType(Exception):
             - strings
             - bytes
             - numbers
-            - tuples 
+            - tuples
             - lists
             - dicts
             - sets
             - booleans
             - None
-            - Ellipsis.
     """
 
     def __init__(self) -> None:

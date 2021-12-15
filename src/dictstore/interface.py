@@ -24,7 +24,7 @@ similar to a python dictionary.
 from typing import Any
 import ast
 
-from dictstore.exceptions import DataStoreFileCorrupted
+from dictstore.exceptions import DataStoreFileCorrupted, UnsupportedValueType
 from dictstore.file_handler import FileHandler
 
 
@@ -64,6 +64,57 @@ class DictStore:
             value = data[line_number_of_key + 1]
             value_parsed = ast.literal_eval(value)
             self.in_memory_dictionary[key_parsed] = value_parsed
+
+    def __check_if_supported_value_type(self, value):
+        """
+        checks if the given value type is supported.
+
+        Supported Types:
+            - strings
+            - bytes
+            - numbers
+            - tuples
+            - lists
+            - dicts
+            - sets
+            - booleans
+            - None
+        """
+
+        if isinstance(value, str):
+            return True
+        if isinstance(value, bytes):
+            return True
+        if isinstance(value, int):
+            return True
+        if isinstance(value, float):
+            return True
+        if isinstance(value, tuple):
+            for sub_value in value:
+                if not self.__check_if_supported_value_type(sub_value):
+                    return False
+            return True
+        if isinstance(value, list):
+            for sub_value in value:
+                if not self.__check_if_supported_value_type(sub_value):
+                    return False
+            return True
+        if isinstance(value, dict):
+            for sub_value in value.values():
+                if not self.__check_if_supported_value_type(sub_value):
+                    return False
+            return True
+        if isinstance(value, set):
+            # we can skip checking values inside set
+            # as set only accepts values that are hashable
+            # and ast.literal_eval supports all hashable types.
+            return True
+        if isinstance(value, bool):
+            return True
+        if value is None:
+            return True
+
+        return False
 
     def __get_escaped_string(self, var: Any) -> str:
         """
@@ -145,6 +196,9 @@ class DictStore:
         and updates the value if it already exists
         creates a new record otherwise
         """
+
+        if not self.__check_if_supported_value_type(value):
+            raise UnsupportedValueType()
 
         # if there is no record with the given key
         # update the in memory dictionary and
