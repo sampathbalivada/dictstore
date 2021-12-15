@@ -42,3 +42,29 @@ class DataStoreFileCorrupted(Exception):
                         "or the contents of the file have been edited manually"
                         )
         super().__init__(self.message)
+
+
+class UnsupportedValueType(Exception):
+    """
+    Rasied when an unsupported value type is passed to
+    DictStore instance
+        Supported Types:
+            - strings
+            - bytes
+            - numbers
+            - tuples 
+            - lists
+            - dicts
+            - sets
+            - booleans
+            - None
+            - Ellipsis.
+    """
+
+    def __init__(self) -> None:
+        self.message = ("The given value type is not supported. "
+                        "Supported data types are "
+                        "strings, bytes, numbers, tuples, lists, "
+                        "dicts, sets, booleans, None and Ellipsis."
+                        )
+        super().__init__(self.message)
