@@ -65,7 +65,7 @@ class DictStore:
             value_parsed = ast.literal_eval(value)
             self.in_memory_dictionary[key_parsed] = value_parsed
 
-    def __check_if_supported_value_type(self, value):
+    def __is_supported_value_type(self, value):
         """
         checks if the given value type is supported.
 
@@ -91,23 +91,23 @@ class DictStore:
             return True
         if isinstance(value, tuple):
             for sub_value in value:
-                if not self.__check_if_supported_value_type(sub_value):
+                if not self.__is_supported_value_type(sub_value):
                     return False
             return True
         if isinstance(value, list):
             for sub_value in value:
-                if not self.__check_if_supported_value_type(sub_value):
+                if not self.__is_supported_value_type(sub_value):
                     return False
             return True
         if isinstance(value, dict):
             for sub_value in value.values():
-                if not self.__check_if_supported_value_type(sub_value):
+                if not self.__is_supported_value_type(sub_value):
                     return False
             return True
         if isinstance(value, set):
-            # we can skip checking values inside set
-            # as set only accepts values that are hashable
-            # and ast.literal_eval supports all hashable types.
+            for sub_value in value:
+                if not self.__is_supported_value_type(sub_value):
+                    return False
             return True
         if isinstance(value, bool):
             return True
@@ -197,7 +197,7 @@ class DictStore:
         creates a new record otherwise
         """
 
-        if not self.__check_if_supported_value_type(value):
+        if not self.__is_supported_value_type(value):
             raise UnsupportedValueType()
 
         # if there is no record with the given key
