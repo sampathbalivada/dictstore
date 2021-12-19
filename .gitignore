@@ -12,3 +12,6 @@ __pycache__/
 
 # virtual environment
 /testvenv/
+
+# test files
+*/test_data

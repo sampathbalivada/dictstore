@@ -20,6 +20,8 @@ file paths are case sensitive.
 import os.path
 import datetime
 
+from pathlib import Path
+
 from dictstore.exceptions import InvalidFileExtension
 
 
@@ -60,6 +62,10 @@ class FileHandler:
         # check if file exists at path
         # and create a datastore file if it doesn't exist
         if not os.path.exists(self.file_path):
+            Path(os.path.dirname(self.file_path)).mkdir(
+                parents=True,
+                exist_ok=True
+                )
             with open(self.file_path, 'w', encoding='utf-8') as data_file:
                 data_file.write(generate_file_header_string())
 
