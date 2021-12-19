@@ -270,5 +270,49 @@ class TestDictStoreValues(unittest.TestCase):
             dict_store['Hi'] = test_value
 
 
+class CheckSingletonBehavior(unittest.TestCase):
+    """
+    checks if the Singleton behavior of the
+    DictStore class is behaving correctly
+    """
+
+    def test_singleton_behavior_same_filename(self):
+        """
+        initializes two DictStore objects with the same filename
+        and verifies if the references are same
+        """
+
+        data_file_name = ('tests/'
+                          'test_singleton_behavior_same_filename'
+                          '.dictstore'
+                          )
+
+        self.assertEqual(
+            DictStore(data_file_name) is DictStore(data_file_name),
+            True
+            )
+
+    def test_singleton_behavior_different_filename(self):
+        """
+        initializes two DictStore objects with the same filename
+        and verifies if the references are same
+        """
+
+        data_file_name_1 = ('tests/'
+                            'test_singleton_behavior_different_filename_1'
+                            '.dictstore'
+                            )
+
+        data_file_name_2 = ('tests/'
+                            'test_singleton_behavior_different_filename_2'
+                            '.dictstore'
+                            )
+
+        self.assertEqual(
+            DictStore(data_file_name_1) is DictStore(data_file_name_2),
+            False
+            )
+
+
 if __name__ == '__main__':
     unittest.main()
