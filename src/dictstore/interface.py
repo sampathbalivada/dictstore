@@ -100,8 +100,10 @@ class DictStore:
                     return False
             return True
         if isinstance(value, dict):
-            for sub_value in value.values():
-                if not self.__is_supported_value_type(sub_value):
+            for key, value in value.items():
+                if not self.__is_supported_value_type(key):
+                    return False
+                if not self.__is_supported_value_type(value):
                     return False
             return True
         if isinstance(value, set):
