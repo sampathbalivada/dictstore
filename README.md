@@ -77,4 +77,3 @@ For more information about ast.literal_eval visit the following link.
 ### To-Do:
 
 - Tests for different types of values to be added
-- Raise exception when creating multiple instances for the same data file 

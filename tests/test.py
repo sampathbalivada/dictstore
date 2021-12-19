@@ -185,6 +185,19 @@ class TestDictStoreKeys(unittest.TestCase):
         dict_store = DictStore(data_file_name)
         self.assertEqual(dict_store[('1', '2')], 45, "String Tuple Key")
 
+    def test_unsupproted_key_type(self):
+        """
+        checks if using an unsupported key type raises an exception
+        """
+
+        data_file_name = 'tests/test_unsupproted_key_type.dictstore'
+
+        clean_temp_files(data_file_name)
+
+        dict_store = DictStore(data_file_name)
+        with self.assertRaises(KeyError):
+            dict_store[Test()] = 45
+
 
 class TestDictStoreValues(unittest.TestCase):
     """
