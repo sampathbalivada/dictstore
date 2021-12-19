@@ -16,19 +16,34 @@
 dictstore is a simple local data store
 for Python that aims to provide an interface
 similar to a python dictionary.
-
-:copyright: (c) 2021 by Sai Sampath Kumar Balivada.
 """
 
 
-from typing import Any
+from typing import Any, DefaultDict
+from pathlib import Path
 import ast
+import dictstore.helpers as helpers
 
 from dictstore.exceptions import DataStoreFileCorrupted, UnsupportedValueType
 from dictstore.file_handler import FileHandler
 
 
-class DictStore:
+class DictStoreSingleton(type):
+    """
+    metaclass to implement singleton behavior for DictStore class
+    """
+    _instances = DefaultDict(None)
+
+    def __call__(cls, datastore_location='./default.dictstore') -> Any:
+        if datastore_location in cls._instances:
+            return cls._instances[datastore_location]
+
+        instance = super(DictStoreSingleton, cls).__call__(datastore_location)
+        cls._instances[datastore_location] = instance
+        return instance
+
+
+class DictStore(metaclass=DictStoreSingleton):
     """
     A class that initializes the datastore into the memory
     and provides functions to manipulate it.
@@ -39,14 +54,19 @@ class DictStore:
         Initializes the in memory dictionary and
         copies all the records from the database file to memory
         """
+
         # create an in memory dictionary to store the value
+        # and set default value to None
         self.in_memory_dictionary = {}
 
-        # set default value to None
         self.in_memory_dictionary.setdefault(None)
 
-        # initialize the data file
-        self.file_handler = FileHandler(datastore_location)
+        # check if the datafile is already opened and return
+        # the object already opened else continue creating a new object
+
+        self.datastore_location = Path(datastore_location).resolve().__str__()
+
+        self.file_handler = FileHandler(self.datastore_location)
 
         # fetch the file contents and parse accordingly
         # parse key and value as JSON objects
@@ -65,67 +85,6 @@ class DictStore:
             value_parsed = ast.literal_eval(value)
             self.in_memory_dictionary[key_parsed] = value_parsed
 
-    def __is_supported_value_type(self, value):
-        """
-        checks if the given value type is supported.
-
-        Supported Types:
-            - strings
-            - bytes
-            - numbers
-            - tuples
-            - lists
-            - dicts
-            - sets
-            - booleans
-            - None
-        """
-
-        if isinstance(value, str):
-            return True
-        if isinstance(value, bytes):
-            return True
-        if isinstance(value, int):
-            return True
-        if isinstance(value, float):
-            return True
-        if isinstance(value, tuple):
-            for sub_value in value:
-                if not self.__is_supported_value_type(sub_value):
-                    return False
-            return True
-        if isinstance(value, list):
-            for sub_value in value:
-                if not self.__is_supported_value_type(sub_value):
-                    return False
-            return True
-        if isinstance(value, dict):
-            for sub_value in value.values():
-                if not self.__is_supported_value_type(sub_value):
-                    return False
-            return True
-        if isinstance(value, set):
-            for sub_value in value:
-                if not self.__is_supported_value_type(sub_value):
-                    return False
-            return True
-        if isinstance(value, bool):
-            return True
-        if value is None:
-            return True
-
-        return False
-
-    def __get_escaped_string(self, var: Any) -> str:
-        """
-        checks if the given key or value is a string and adds
-        quotes around the key if it is.
-        """
-        if isinstance(var, str):
-            return '\'' + var + '\''
-
-        return str(var)
-
     def __rewrite_data_file(self) -> None:
         """
         converts in memory dictionary to string
@@ -142,8 +101,8 @@ class DictStore:
 
         for key, value in self.in_memory_dictionary.items():
             print(key, '|', value)
-            data_file_cache.append(self.__get_escaped_string(key) + '\n')
-            data_file_cache.append(self.__get_escaped_string(value) + '\n')
+            data_file_cache.append(helpers.get_escaped_string(key) + '\n')
+            data_file_cache.append(helpers.get_escaped_string(value) + '\n')
 
         self.file_handler.rewrite_to_file(data_file_cache)
 
@@ -154,8 +113,8 @@ class DictStore:
         to the end of data file
         """
 
-        data_record_cache = self.__get_escaped_string(key) + '\n'
-        data_record_cache += self.__get_escaped_string(value) + '\n'
+        data_record_cache = helpers.get_escaped_string(key) + '\n'
+        data_record_cache += helpers.get_escaped_string(value) + '\n'
 
         self.file_handler.append_to_file(data_record_cache)
 
@@ -197,7 +156,13 @@ class DictStore:
         creates a new record otherwise
         """
 
-        if not self.__is_supported_value_type(value):
+        if not helpers.is_supported_key_type(key):
+            message = ('Supported key types are '
+                       'int, float, str, tuple and NoneType'
+                       )
+            raise KeyError(message)
+
+        if not helpers.is_supported_value_type(value):
             raise UnsupportedValueType()
 
         # if there is no record with the given key
