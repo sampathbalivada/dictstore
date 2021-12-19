@@ -21,14 +21,30 @@ similar to a python dictionary.
 """
 
 
-from typing import Any
+from typing import Any, DefaultDict
+from pathlib import Path
 import ast
 
 from dictstore.exceptions import DataStoreFileCorrupted, UnsupportedValueType
 from dictstore.file_handler import FileHandler
 
 
-class DictStore:
+class DictStoreSingleton(type):
+    """
+    metaclass to implement singleton behavior for DictStore class
+    """
+    _instances = DefaultDict(None)
+
+    def __call__(cls, datastore_location='./default.dictstore') -> Any:
+        if datastore_location in cls._instances:
+            return cls._instances[datastore_location]
+
+        instance = super(DictStoreSingleton, cls).__call__(datastore_location)
+        cls._instances[datastore_location] = instance
+        return instance
+
+
+class DictStore(metaclass=DictStoreSingleton):
     """
     A class that initializes the datastore into the memory
     and provides functions to manipulate it.
@@ -39,14 +55,19 @@ class DictStore:
         Initializes the in memory dictionary and
         copies all the records from the database file to memory
         """
+
         # create an in memory dictionary to store the value
+        # and set default value to None
         self.in_memory_dictionary = {}
 
-        # set default value to None
         self.in_memory_dictionary.setdefault(None)
 
-        # initialize the data file
-        self.file_handler = FileHandler(datastore_location)
+        # check if the datafile is already opened and return
+        # the object already opened else continue creating a new object
+
+        self.datastore_location = Path(datastore_location).resolve().__str__()
+
+        self.file_handler = FileHandler(self.datastore_location)
 
         # fetch the file contents and parse accordingly
         # parse key and value as JSON objects
